@@ -1,3 +1,4 @@
 [submodule "docker/acahealth"]
 	path = docker/acahealth
-	url = https://gitlab.com/pratscma/acahealth.git
+  url = https://gitlab.com/pratscma/acahealth.git
+	branch = cleanup
