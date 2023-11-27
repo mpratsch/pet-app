@@ -1,0 +1,65 @@
+FROM php:5.6.31-apache
+MAINTAINER Martina Rath <mpratscher@gmail.com>
+
+COPY configs/apt.conf /etc/apt/sources.list
+# CMD echo "Acquire::Check-Valid-Until false;" | tee -a /etc/apt/apt.conf.d/10-nocheckvalid
+RUN apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 7638D0442B90D010
+RUN apt-get update && apt-get install -y debian-archive-keyring
+# Install apache, PHP, and supplimentary programs. openssh-server, curl, and lynx-cur are for debugging the container.
+RUN apt-get update && apt-get -y install vim git
+#RUN apt-get update && apt-get -y upgrade && DEBIAN_FRONTEND=noninteractive apt-get -y install \
+#    url lynx-cur vim  openssh-server php5-curl apt-utils
+
+# PHP extensions
+RUN docker-php-ext-install pdo pdo_mysql
+
+# php-xml =  has the ut8_encode/decode function
+# php-curl = sets curl_init
+
+# Enable apache mods.
+RUN a2enmod php5
+RUN a2enmod rewrite
+
+# Update the PHP.ini file, enable <? ?> tags and quieten logging.
+#RUN sed -i "s/short_open_tag = Off/short_open_tag = On/" /etc/php/5.0/apache2/php.ini
+#RUN sed -i "s/error_reporting = .*$/error_reporting = E_ERROR | E_WARNING | E_PARSE/" /etc/php/5.0/apache2/php.ini
+
+# Manually set up the apache environment variables
+ENV APACHE_RUN_USER www-data
+ENV APACHE_RUN_GROUP www-data
+ENV APACHE_LOG_DIR /var/log/apache2
+ENV APACHE_LOCK_DIR /var/lock/apache2
+ENV APACHE_PID_FILE /var/run/apache2.pid
+
+# Expose apache.
+EXPOSE 80
+
+# Copy this repo into place.
+#ADD animalcare /var/www/html
+
+ADD configs/gitconfig /root/.gitconfig
+#ADD ssh /root/.ssh
+RUN rm -r /var/www/html
+WORKDIR /var/www/
+ADD configs/mysql.conf mysql_config.cf
+ADD acahealth html
+#RUN git clone git@gitlab.com:pratscma/animalcare.git html
+WORKDIR /var/www/html
+RUN chown -PR www-data.www-data *
+#RUN git fetch --all
+#RUN git checkout -b stable
+#RUN git pull origin master
+#RUN mkdir tmp
+#RUN mkdir logs
+#RUN mkdir logs_intern
+# ^RUN chown -PR www-data:www-data tmp logs_intern
+
+# Update the default apache site with the config we created.
+ADD configs/apache.conf /etc/apache2/sites-enabled/000-default.conf
+
+# Add the mysql config file
+#ADD mysql.conf /etc/mysql.conf
+
+# By default start up apache in the foreground, override with /bin/bash for interative.
+#CMD /usr/sbin/apache2ctl -D FOREGROUND
+

@@ -1,0 +1,18 @@
+[user]
+  ui = color
+  email = mpratscher@gmail.com
+  name = Martina Rath
+[color]
+  ui = true
+[color "diff"]
+  meta = blue black bold
+[alias]
+        br = branch
+        co = checkout
+        ci = commit
+        st = status
+        hist = log --pretty=format:\"%h %ad | %s [%an]\" --graph --date=short
+        type = cat-file -t
+        dump = cat-file -p
+        glame = "!f(){ git grep -n \"$@\" | while IFS=: read i j k; do git --no-pager blame -L $j,$j $i; done ;}; f"
+
